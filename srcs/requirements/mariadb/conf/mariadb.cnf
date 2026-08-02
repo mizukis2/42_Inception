@@ -1,0 +1,6 @@
+#by default, MariaDB often binds only to 127.0.0.1 (localhost)
+#meaning it only accepts connections from inside the same machine. 
+[mysqld]
+bind-address = 0.0.0.0
+port = 3306
+datadir = /var/lib/mysql
