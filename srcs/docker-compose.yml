@@ -1,0 +1,4 @@
+services:
+  mariadb:
+    build: ./requirements/mariadb
+    container_name: mariadb

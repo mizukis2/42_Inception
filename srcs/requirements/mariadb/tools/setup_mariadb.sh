@@ -9,6 +9,8 @@ mkdir -p /run/mysqld
 chown -R mysql:mysql /run/mysqld
 
 if [ ! -d "/var/lib/mysql/mysql" ]; then
+    echo "Database not initialized. Running setup..."
+
     mariadb-install-db --user=mysql
     
     mysqld --user=mysql --skip-networking &
@@ -24,6 +26,11 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
 EOSQL
 
     mysqladmin -u root shutdown
+
+    echo "Database initialized."
+
+else
+    echo "DATABASE ALREADY EXISTS: Skipping initialization"
 
 fi
 
