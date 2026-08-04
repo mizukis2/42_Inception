@@ -1,15 +1,40 @@
 #!/bin/bash
 
-# 1. Check: has the database already been initialized before?
+set -e
+
+echo "Starting MariaDB container"
+
+mkdir -p /run/mysqld
+
+chown -R mysql:mysql /run/mysqld
+
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-    # 2. First run - do the one-time setup
-    #    - initialize the base MariaDB system tables
-    #    - create your wordpress database
-    #    - create your two users
-    #    - set their passwords/privileges
-    echo "First run - initializing database..."
-    # ... your setup commands / .sql script go here
+    echo "Database not initialized. Running setup..."
+
+    mariadb-install-db --user=mysql
+    
+    mysqld --user=mysql --skip-networking &
+    until mysqladmin ping -u root --silent; do
+        sleep 1
+    done
+
+    mysql -u root <<-EOSQL
+        CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
+        CREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+        GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
+        FLUSH PRIVILEGES;
+EOSQL
+
+    mysqladmin -u root shutdown
+
+    echo "Database initialized."
+
+else
+    echo "DATABASE ALREADY EXISTS: Skipping initialization"
+
 fi
 
-# 3. Always, every time - actually start the server in the foreground
-exec mysqld
+echo "Starting MariaDB server"
+
+exec mysqld --user=mysql
+
