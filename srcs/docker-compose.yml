@@ -1,4 +1,36 @@
 services:
   mariadb:
-    build: ./requirements/mariadb
-    container_name: mariadb
+   build: ./requirements/mariadb
+   container_name: mariadb
+   environment:
+     MYSQL_DATABASE: ${MYSQL_DATABASE}
+     MYSQL_USER: ${MYSQL_USER}
+     MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  volumes:
+    mariadb_data: /var/lib/mysql
+  restart: always
+
+services:
+ wordpress:
+  build: ./requirements/wordpress
+  container_name: wordpress
+  depends_on:
+   - mariadb
+  restart: always
+volumes:
+  wordpress_data: /var/lib/~~~
+
+
+services:
+  nginx:
+  build: ./requirements/nginx
+  container_name: nginx
+  depends_on:
+    - wordpress
+  restart: always
+
+
+volumes:
+  mariadb_data:
+  wordpress_data:
