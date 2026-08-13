@@ -19,7 +19,7 @@ services:
    - mariadb
   restart: always
 volumes:
-  wordpress_data: /var/lib/~~~
+  wordpress_data: /var/www/html
 
 
 services:
@@ -29,6 +29,8 @@ services:
   depends_on:
     - wordpress
   restart: always
+volumes:
+  wordpress_data: /var/www/html
 
 
 volumes:
