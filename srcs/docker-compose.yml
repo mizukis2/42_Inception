@@ -8,29 +8,27 @@ services:
      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
   volumes:
-    mariadb_data: /var/lib/mysql
+    - mariadb_data: /var/lib/mysql
   restart: always
 
-services:
- wordpress:
-  build: ./requirements/wordpress
-  container_name: wordpress
-  depends_on:
-   - mariadb
-  restart: always
-volumes:
-  wordpress_data: /var/www/html
+  wordpress:
+    build: ./requirements/wordpress
+    container_name: wordpress
+    depends_on:
+      - mariadb
+    volumes:
+      - wordpress_data: /var/www/html
+    restart: always
 
 
-services:
   nginx:
-  build: ./requirements/nginx
-  container_name: nginx
-  depends_on:
-    - wordpress
-  restart: always
-volumes:
-  wordpress_data: /var/www/html
+    build: ./requirements/nginx
+    container_name: nginx
+    depends_on:
+      - wordpress
+    volumes:
+      - wordpress_data: /var/www/html:ro
+    restart: always
 
 
 volumes:
