@@ -10,6 +10,7 @@ RUN apt update && apt install -y \
     php-zip \
     wget \
     tar \
+    mariadb-client \
     && rm -rf /var/lib/apt/lists/*
 
 #tar could be removed if there is in debian:bookworm by default    

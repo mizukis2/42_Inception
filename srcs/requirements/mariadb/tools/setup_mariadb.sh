@@ -18,6 +18,8 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
         sleep 1
     done
 
+    echo "MariaDB is ready for initialization."
+
     mariadb -u root <<-EOSQL
         CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
         CREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
