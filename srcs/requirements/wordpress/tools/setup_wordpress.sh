@@ -6,6 +6,9 @@ echo "Starting WordPress container"
 
 echo "Waiting for MariaDB to be ready..."
 
+MYSQL_PASSWORD="$(cat /run/secrets/db_password)"
+WP_ADMIN_PASSWORD="$(cat /run/secrets/wp_admin_password)"
+
 until mariadb-admin ping -h mariadb -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" --silent; do
     sleep 1
 done
