@@ -2,6 +2,7 @@ SECRETS_DIR = secrets
 DB_ROOT_PASSWORD = $(SECRETS_DIR)/db_root_password.txt
 DB_PASSWORD = $(SECRETS_DIR)/db_password.txt
 WP_ADMIN_PASSWORD = $(SECRETS_DIR)/wp_admin_password.txt
+COMPOSE_FILE = srcs/docker-compose.yml
 
 setup:
 	@echo "---set up secrets---"
@@ -17,19 +18,19 @@ setup:
 	fi
 
 up: setup
-	@docker compose up
+	@docker compose -f $(COMPOSE_FILE) up
 	@echo "---Docker compose up---"
 
 build: setup
-	@docker compose up --build
+	@docker compose -f $(COMPOSE_FILE) up --build
 	@echo "---Docker compose up --build---"
 
 down:
-	@docker compose down
+	@docker compose -f $(COMPOSE_FILE) down
 	@echo "---Docker down---"
 
 fdown:
-	@docker compose down -v
+	@docker compose -f $(COMPOSE_FILE) down -v
 	@echo "---Docker compose down fully---"
 	@rm -rf $(SECRETS_DIR)
 
