@@ -33,7 +33,7 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
         CREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
         GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
         FLUSH PRIVILEGES;
-EOSQL
+    EOSQL
 
     mariadb-admin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
 
