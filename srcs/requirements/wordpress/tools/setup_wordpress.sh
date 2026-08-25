@@ -15,14 +15,21 @@ done
 
 echo "MariaDB is ready!"
 if [ ! -f "/var/www/html/wp-config.php" ]; then
-    wp config create --dbname="$MYSQL_DATABASE" --dbuser="$MYSQL_USER" \
-        --dbpass="$MYSQL_PASSWORD" --dbhost=mariadb \
-        --path=/var/www/html --allow-root
-    wp core install --url=https://mmatsui.42.fr --title=inception \
+    wp config create \
+        --dbname="$MYSQL_DATABASE" \
+        --dbuser="$MYSQL_USER" \
+        --dbpass="$MYSQL_PASSWORD" \
+        --dbhost=mariadb \
+        --path=/var/www/html \
+        --allow-root
+    wp core install \
+        --url=https://"$DOMAIN_NAME" \
+        --title=inception \
         --admin_user="$WP_ADMIN_USER" \
         --admin_password="$WP_ADMIN_PASSWORD" \
         --admin_email="$WP_ADMIN_EMAIL" \
-        --path=/var/www/html --allow-root
+        --path=/var/www/html \
+        --allow-root
        
     echo "WordPress is initialized."
 
