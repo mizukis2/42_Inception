@@ -45,8 +45,14 @@ services:
       - wordpress_data:/var/www/html:ro
     restart: always
     ports:
-      - "8443:443"
+      - "443:443"
+      - "8080:8080"
       #8443
+
+  adminer:
+    build: ./requirements/bonus/adminer
+    container_name: adminer
+
 
 volumes:
   mariadb_data:
@@ -59,3 +65,6 @@ secrets:
     file: ../secrets/db_password.txt
   wp_admin_password:
     file: ../secrets/wp_admin_password.txt
+
+networks:
+  inception:
