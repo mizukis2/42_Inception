@@ -1,19 +1,23 @@
 services:
   mariadb:
+    networks:
+      - inception
     build: ./requirements/mariadb
     container_name: mariadb
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
+      DOMAIN_NAME: ${DOMAIN_NAME}
     secrets:
       - db_root_password
       - db_password
-
     volumes:
       - mariadb_data:/var/lib/mysql
     restart: always
 
   wordpress:
+    networks:
+      - inception
     build: ./requirements/wordpress
     container_name: wordpress
     environment:
@@ -21,6 +25,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       WP_ADMIN_USER: ${WP_ADMIN_USER}
       WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      DOMAIN_NAME: ${DOMAIN_NAME}
     secrets:
       - db_root_password
       - db_password
@@ -33,19 +38,36 @@ services:
 
 
   nginx:
+    networks:
+      - inception
     build: ./requirements/nginx
     container_name: nginx
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME}
     depends_on:
       - wordpress
     volumes:
       - wordpress_data:/var/www/html:ro
+      - adminer_data:/var/www/adminer
     restart: always
     ports:
-      - "443:443"
+      - "8443:443"
+      - "8080:8080"
+      #8443
+
+  adminer:
+    networks:
+      - inception
+    build: ./requirements/bonus/adminer
+    container_name: adminer
+    volumes:
+      - adminer_data:/var/www/adminer
+
 
 volumes:
   mariadb_data:
   wordpress_data:
+  adminer_data:
 
 secrets:
   db_root_password:
@@ -54,3 +76,6 @@ secrets:
     file: ../secrets/db_password.txt
   wp_admin_password:
     file: ../secrets/wp_admin_password.txt
+
+networks:
+  inception:

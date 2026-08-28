@@ -9,7 +9,11 @@ if [ ! -f /etc/nginx/ssl/server.crt ]; then
         -newkey rsa:2048 \
         -keyout /etc/nginx/ssl/server.key \
         -out /etc/nginx/ssl/server.crt \
-        -subj "/C=NL/ST=NoordHolland/L=Amsterdam/O=Codam/OU=Inception/CN=mmatsui.42.fr"
+        -subj "/C=NL/ST=NoordHolland/L=Amsterdam/O=Codam/OU=Inception/CN=${DOMAIN_NAME}"
 fi
+
+envsubst '${DOMAIN_NAME}' \
+    < /etc/nginx/templates/default.conf.template \
+    > /etc/nginx/conf.d/default.conf
 
 exec nginx -g "daemon off;"

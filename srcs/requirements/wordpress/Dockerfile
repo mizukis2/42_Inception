@@ -11,9 +11,7 @@ RUN apt update && apt install -y \
     wget \
     tar \
     mariadb-client \
-    && rm -rf /var/lib/apt/lists/*
-
-#tar could be removed if there is in debian:bookworm by default    
+    && rm -rf /var/lib/apt/lists/*  
 
 WORKDIR /var/www/html
 

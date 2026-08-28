@@ -1,11 +1,11 @@
 FROM debian:bookworm
 
-RUN apt update && apt install -y nginx openssl \
+RUN apt update && apt install -y nginx openssl gettext\
     && rm -rf /var/lib/apt/lists/*
 
 RUN rm -f /etc/nginx/sites-enabled/default
 
-COPY ./conf/default.conf /etc/nginx/conf.d/default.conf
+COPY ./conf/default.conf.template /etc/nginx/templates/default.conf.template
 
 COPY ./tools/setup_nginx.sh /setup_nginx.sh
 
