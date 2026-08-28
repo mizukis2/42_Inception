@@ -1,5 +1,7 @@
 services:
   mariadb:
+    networks:
+      - inception
     build: ./requirements/mariadb
     container_name: mariadb
     environment:
@@ -9,12 +11,13 @@ services:
     secrets:
       - db_root_password
       - db_password
-
     volumes:
       - mariadb_data:/var/lib/mysql
     restart: always
 
   wordpress:
+    networks:
+      - inception
     build: ./requirements/wordpress
     container_name: wordpress
     environment:
@@ -35,6 +38,8 @@ services:
 
 
   nginx:
+    networks:
+      - inception
     build: ./requirements/nginx
     container_name: nginx
     environment:
@@ -43,20 +48,26 @@ services:
       - wordpress
     volumes:
       - wordpress_data:/var/www/html:ro
+      - adminer_data:/var/www/adminer
     restart: always
     ports:
-      - "443:443"
+      - "8443:443"
       - "8080:8080"
       #8443
 
   adminer:
+    networks:
+      - inception
     build: ./requirements/bonus/adminer
     container_name: adminer
+    volumes:
+      - adminer_data:/var/www/adminer
 
 
 volumes:
   mariadb_data:
   wordpress_data:
+  adminer_data:
 
 secrets:
   db_root_password:
