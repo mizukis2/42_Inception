@@ -29,25 +29,38 @@ For example, NGINX can communicate with WordPress through the WordPress service 
 The host network mode is different. When a container uses the host network, it shares the host's network namespace instead of having its own isolated network. This removes some of Docker's network isolation and makes the container use the host's network interfaces directly.<br>
 Using a dedicated Docker network is therefore useful in this project because it provides network isolation between the containers while allowing the services that need to communicate with each other to do so.<br>
 ```
-                    Docker Network
-        ┌─────────────────────────────────┐
-        │                                 │
-        │  NGINX ──────→ WordPress        │
-        │    │                │           │
-        │    │                ↓           │
-        │    │             MariaDB        │
-        │    │                            │
-        │    └────────────→ Adminer       │
-        │                                 │
-        └─────────────────────────────────┘
-                 │
-                 │ published port
-                 ↓
-              Host / VM
-                 │
-                 ↓
-              Browser
+                         Docker Network: inception
+        ┌─────────────────────────────────────────────────┐
+        │                                                 │
+        │   NGINX                                         │
+        │    │                                            │
+        │    ├────── FastCGI :9000 ──→ WordPress/PHP-FPM  │
+        │    │                              │             │
+        │    │                              │ MySQL :3306 │
+        │    │                              ↓             │
+        │    │                           MariaDB          │
+        │    │                                            │
+        │    └────── FastCGI :9000──→ Adminer/PHP-FPM     │
+        │                                    │            │
+        │                                    │ MySQL :3306│ 
+        │                                    ↓            │
+        │                                 MariaDB         │
+        │                                                 │
+        └─────────────────────────────────────────────────┘
+                         │
+                         │ published ports
+                         │
+                  :443   │    :8080
+                 |       ↓       |
+                 |  Host / VM    |
+                 |       │       |
+                 |       ↓       | 
+          (WordPress)  Browser  (Adminer)
 ```
+Port 443 is the published port for NGINX's WordPress endpoint, while port 8080 is the published port for NGINX's Adminer endpoint. NGINX receives the browser request and forwards PHP requests through FastCGI to PHP-FPM on port 9000. Both the WordPress and Adminer containers use port 9000 internally because they are separate containers.<br>
+
+MariaDB uses port 3306 for MySQL connections. WordPress and Adminer both connect to MariaDB through port 3306 over the Docker network. Port 3306 does not need to be published to the Host because these containers can communicate with MariaDB directly through the Docker network using the MariaDB service name.<br>
+
 ### Docker Volumes vs Bind Mounts
 Both Docker volumes and bind mounts allow data to persist outside the container's writable layer. This means that data can remain available even if a container is stopped, removed, or recreated.<br>
 A Docker volume is managed by Docker. Docker decides where the data is stored on the host, and the user normally interacts with the volume through Docker commands.<br>
