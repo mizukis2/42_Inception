@@ -337,6 +337,19 @@ These commands are useful for checking the status of containers and troubleshoot
 
 *docker compose exec only works with a running container. If a container has stopped, use docker compose ps and docker compose logs <service> first to find out why.
 
+### Check database
+Test the database directly:
+```bash
+docker exec -it mariadb bash
+mysql -u <MYSQL_USER> -p
+```
+Password: contents of db_password.txt
+After logging in:
+```bash
+SHOW DATABASES;
+USE <MYSQL_DATABASE>;
+SHOW TABLES;
+```
 
 ## Data Storage and Persistence
 
