@@ -59,6 +59,12 @@ To verify it'll actually apply without even rebooting:
 sudo sysctl --system
 ```
 
+## Make directories for data
+``` bash
+mkdir -p /home/mmatsui/data/mariadb
+mkdir -p /home/mmatsui/data/wordpress
+```
+
 
 ## Makefile
 
@@ -284,18 +290,37 @@ These commands are useful for checking the status of containers and troubleshoot
 
 ## Data Storage and Persistence
 
-The project uses Docker named volumes to store data outside the containers' writable layers.
+The project uses Docker named volumes to store persistent data outside the containers' writable layers.
 
 The volumes are defined in `docker-compose.yml`:
 
 ```yaml
 volumes:
   mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/mmatsui/data/mariadb
+
   wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/mmatsui/data/wordpress
+
   adminer_data:
 ```
 
-Docker manages the physical storage location of these volumes on the host system.
+The `mariadb_data` and `wordpress_data` volumes use the Docker `local` volume driver with bind-mount options. This means that the actual data is stored in directories on the VM:
+
+```text
+/home/mmatsui/data/mariadb
+/home/mmatsui/data/wordpress
+```
+
+The containers access these directories through Docker named volumes.
 
 ### MariaDB Data
 
@@ -313,24 +338,38 @@ MariaDB stores its database files in:
 /var/lib/mysql
 ```
 
-Because this directory is mounted to the `mariadb_data` volume, the database data persists even when the MariaDB container is removed and recreated.
+This is the MariaDB data directory **inside the container**.
+
+The named volume is backed by the following directory on the VM:
 
 ```text
-MariaDB container
-       │
-       ▼
-/var/lib/mysql
-       │
-       ▼
-mariadb_data
-       │
-       ▼
-Persistent Docker volume
+/home/mmatsui/data/mariadb
 ```
+
+Therefore, the data flow is:
+
+```text
+VM host
+/home/mmatsui/data/mariadb
+        │
+        │ bind mount
+        ▼
+mariadb_data
+Docker named volume
+        │
+        ▼
+MariaDB container
+/var/lib/mysql
+        │
+        ▼
+MariaDB database files
+```
+
+Because the database files are stored outside the container's writable layer, the data remains available when the MariaDB container is removed and recreated, as long as the volume and its backing directory are preserved.
 
 ### WordPress Data
 
-The `wordpress_data` volume is shared between the WordPress and NGINX containers.
+The `wordpress_data` volume is shared between the WordPress and NGINX containers:
 
 ```yaml
 wordpress:
@@ -342,33 +381,51 @@ nginx:
     - wordpress_data:/var/www/html:ro
 ```
 
-WordPress writes its files to:
+WordPress stores its files in:
 
 ```text
 /var/www/html
 ```
 
-NGINX mounts the same volume as read-only using `:ro`. This allows NGINX to access the WordPress files without modifying them.
+The `wordpress_data` volume is backed by the following directory on the VM:
 
 ```text
-WordPress
-    │
-    │ read/write
-    ▼
-wordpress_data
-    │
-    ├──────────► Persistent Docker volume
-    │
-    ▼
-NGINX
-read-only
+/home/mmatsui/data/wordpress
 ```
 
-As a result, WordPress files persist when the WordPress container is recreated.
+WordPress mounts the volume with read/write access, while NGINX mounts the same volume as read-only using `:ro`.
+
+This allows:
+
+* WordPress to create and modify files.
+* NGINX to read and serve those files.
+* NGINX to be prevented from modifying the WordPress files through this mount.
+
+The data flow is:
+
+```text
+VM host
+/home/mmatsui/data/wordpress
+        │
+        │ bind mount
+        ▼
+wordpress_data
+Docker named volume
+        │
+        ├──────────────► WordPress
+        │                /var/www/html
+        │                read/write
+        │
+        └──────────────► NGINX
+                         /var/www/html
+                         read-only
+```
+
+As a result, WordPress files persist independently of the WordPress container.
 
 ### Adminer Data
 
-The `adminer_data` volume is used to share the Adminer files between the Adminer and NGINX containers.
+The `adminer_data` volume is used to share the Adminer application files between the Adminer and NGINX containers:
 
 ```yaml
 adminer:
@@ -380,32 +437,56 @@ nginx:
     - adminer_data:/var/www/adminer
 ```
 
-The Adminer container stores the Adminer application files in:
+The Adminer application files are stored inside the Adminer container at:
 
 ```text
 /var/www/adminer
 ```
 
-The NGINX container mounts the same volume so that it can serve the Adminer web interface.
+The same volume is mounted by NGINX so that NGINX can access the Adminer files required to serve the Adminer web interface.
+
+Unlike `mariadb_data` and `wordpress_data`, `adminer_data` does not contain the application's database data. It is used to share the Adminer application files between the two containers.
 
 ### How Data Persists
 
-Docker volumes exist independently from containers.
+Docker named volumes have a lifecycle independent from the containers that use them.
 
-For example:
+In this project, MariaDB and WordPress use named volumes backed by directories on the VM:
 
 ```text
-Container
-    │
-    ▼
-Mounted directory
-    │
-    ▼
-Docker named volume
-    │
-    ▼
-Docker-managed storage on the host
+MariaDB
+
+/home/mmatsui/data/mariadb
+        │
+        ▼
+mariadb_data
+        │
+        ▼
+/var/lib/mysql
+        │
+        ▼
+MariaDB
 ```
+
+```text
+WordPress
+
+/home/mmatsui/data/wordpress
+        │
+        ▼
+wordpress_data
+        │
+        ├──────────► /var/www/html (WordPress, read/write)
+        │
+        └──────────► /var/www/html (NGINX, read-only)
+```
+
+This separation means that the containers themselves can be removed and recreated without losing the persistent MariaDB database or WordPress files.
+
+However, removing the volumes themselves, or deleting their backing directories on the VM, will remove the persistent data.
+
+
+### Removing Containers and Volumes
 
 When running:
 
@@ -413,11 +494,11 @@ When running:
 make down
 ```
 
-Docker Compose stops and removes the containers, but the named volumes remain. When the project is started again, the new containers reuse the existing volumes.
+Docker Compose stops and removes the containers, but the named volumes remain.
 
-Therefore, the MariaDB database and WordPress files remain available.
+When the project is started again, the new containers reuse the existing volumes. Therefore, the MariaDB database, WordPress files, and Adminer files remain available.
 
-To completely remove the containers and volumes, run:
+To remove the containers and Docker named volumes, run:
 
 ```bash
 make fdown
@@ -435,4 +516,22 @@ The `-v` option removes the project's named volumes:
 * `wordpress_data`
 * `adminer_data`
 
-As a result, the MariaDB database, WordPress files, and Adminer files stored in these volumes are removed. The project will start with a fresh environment the next time it is rebuilt.
+However, `mariadb_data` and `wordpress_data` are backed by directories on the VM:
+
+```text
+/home/mmatsui/data/mariadb
+/home/mmatsui/data/wordpress
+```
+
+Therefore, `make fdown` removes the Docker named volumes but **does not delete the data stored in these directories**.
+
+The Adminer volume is a Docker-managed volume, so its contents are removed when `adminer_data` is removed.
+
+To completely reset the project, including the persistent MariaDB and WordPress data, the backing directories must also be deleted manually:
+
+```bash
+sudo rm -rf /home/mmatsui/data/mariadb
+sudo rm -rf /home/mmatsui/data/wordpress
+```
+
+After deleting these directories, the project will start with a fresh MariaDB database and WordPress installation the next time it is rebuilt.
