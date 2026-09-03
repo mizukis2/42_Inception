@@ -122,5 +122,46 @@ Click **Advanced...** and then **Accept the Risk and Continue** to access the we
 ## Stop the project
 
 ```bash
-make fdown
+make down
+```
+
+## Manage credentials
+
+```bash
+secrets/
+├── db_password
+├── db_root_password
+└── wp_admin_password
+```
+- `db_root_password.txt` → MariaDB root password
+- `db_password.txt` → MariaDB application user password
+- `wp_admin_password.txt` → WordPress administrator password
+- Secrets are generated automatically by `make setup` if they don't already exist.
+- They should not be committed to Git.
+- Running `make down` keeps the existing credentials.
+- Running `make fclean` removes the secrets, so the next build generates new credentials.
+- These passwords can be retrieved by running
+```bash
+cat secrets/db_password.txt
+cat secrets/db_root_password.txt
+cat secrets/wp_admin_password.txt
+```
+
+## Basic check
+### Check running containers
+```bash
+docker compose -f srcs/docker-compose.yml ps
+```
+### Check Docker network
+```bash
+docker network ls
+```
+### Check volumes
+```bash
+docker volume ls
+```
+### Check persistent storage
+```bash
+docker volume inspect srcs_mariadb_data
+docker volume inspect srcs_wordpress_data
 ```

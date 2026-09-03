@@ -65,7 +65,7 @@ MariaDB uses port 3306 for MySQL connections. WordPress and Adminer both connect
 Both Docker volumes and bind mounts allow data to persist outside the container's writable layer. This means that data can remain available even if a container is stopped, removed, or recreated.<br>
 A Docker volume is managed by Docker. Docker decides where the data is stored on the host, and the user normally interacts with the volume through Docker commands.<br>
 A bind mount maps a specific file or directory from the host filesystem into a container. The user controls the exact location of the data on the host.<br>
-In this project, I use Docker volumes to persist the WordPress, MariaDB and Adminer data. This ensures that the website files and database data are not lost when the containers are recreated.<br>
+In this project, I use Docker named volumes for persistent storage. The MariaDB and WordPress volumes are configured with the local volume driver and bind-mount options so that their data is stored in specific directories on the VM.<br>
 
 ## Instructions
 
