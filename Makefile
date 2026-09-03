@@ -40,7 +40,7 @@ fclean: fdown
 	@sudo find /home/mmatsui/data/wordpress -mindepth 1 -delete
 	@echo "---Delete datas---"
 
-re: fdown
+re: fclean
 	@$(MAKE) build
 
 .PHONY : setup up build down fdown re
