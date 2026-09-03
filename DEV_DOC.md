@@ -65,7 +65,6 @@ mkdir -p /home/mmatsui/data/mariadb
 mkdir -p /home/mmatsui/data/wordpress
 ```
 
-
 ## Makefile
 
 The Makefile provides commands to simplify the management of the Docker environment.
@@ -79,7 +78,7 @@ make setup
 This command:
 
 * Creates the `secrets` directory.
-* Generates random passwords.
+* Generates random passwords if the corresponding secret files do not already exist.
 * Stores each password in a separate text file:
 
   * `db_root_password.txt`
@@ -87,6 +86,8 @@ This command:
   * `wp_admin_password.txt`
 
 The secret files are used by Docker Compose to provide sensitive credentials to the appropriate containers.
+
+If the secret files already exist, `make setup` does not generate new passwords. This allows the existing credentials to remain consistent with the persistent database.
 
 ### Start the Containers
 
@@ -100,11 +101,13 @@ This is equivalent to:
 docker compose -f $(COMPOSE_FILE) up
 ```
 
-This command starts the containers using the existing Docker images.
+Before starting the containers, `make up` runs the `setup` target to ensure that the required secret files exist.
 
-If the images have not been built yet, Docker Compose may report that the required images are missing. Use `make build` to build the images and start the containers.
+This command starts the containers using the existing Docker images. It does not automatically rebuild the images.
 
-If the containers and volumes already exist, the existing data is preserved.
+If the required images do not exist yet, use `make build` instead.
+
+If existing volumes and persistent data are available, the containers reuse them.
 
 ### Build Images and Start the Containers
 
@@ -124,13 +127,13 @@ and then:
 docker compose -f $(COMPOSE_FILE) up --build
 ```
 
-`--build` tells Docker Compose to build the images before starting the containers.
+The `--build` option tells Docker Compose to build the images before starting the containers.
 
 Use this command when you have changed a Dockerfile or other files used during the image build and want to rebuild the images.
 
 A Docker **image** is a blueprint containing the software, configuration, and dependencies required to create a container.
 
-A Docker **container** is a running instance of an image.
+A Docker **container** is an instance of an image running as an isolated environment.
 
 ### Stop the Containers
 
@@ -144,13 +147,13 @@ This is equivalent to:
 docker compose -f $(COMPOSE_FILE) down
 ```
 
-This command stops and removes the project's containers and networks, but does not remove the named volumes.
+This command stops and removes the project's containers and networks, but does not remove the named volumes or the generated secret files.
 
-The data stored in the volumes is therefore preserved.
+The persistent MariaDB and WordPress data therefore remains available.
 
-When you run `make up` again, the containers can use the existing volumes and their data remains available.
+When `make up` or `make build` is run again, the containers can reuse the existing persistent data and credentials.
 
-### Stop Containers and Remove Volumes
+### Stop Containers and Remove Docker Volumes
 
 ```bash
 make fdown
@@ -162,30 +165,77 @@ This is equivalent to:
 docker compose -f $(COMPOSE_FILE) down -v
 ```
 
-and removing the local `secrets` directory.
+This command stops and removes the project's containers and networks, and removes the project's Docker named volumes.
 
-The `-v` option removes the Docker volumes associated with the project, so persistent data such as the MariaDB database and WordPress data is deleted.
+The host-backed MariaDB and WordPress data is **not deleted** because the volumes use directories on the VM as their backing storage:
 
-The secrets directory is also removed so that the generated password files are deleted.
+```text
+/home/mmatsui/data/mariadb
+/home/mmatsui/data/wordpress
+```
 
-**Warning:** This command permanently removes the project's persistent data and generated secret files.
+The generated secret files are also preserved.
 
-### Clean Rebuild
+When the project is started again, Docker recreates the named volumes and reconnects them to the existing data directories.
+
+### Complete Cleanup
+
+```bash
+make fclean
+```
+
+This command performs a complete cleanup of the project:
+
+```bash
+make fdown
+
+rm -rf $(SECRETS_DIR)
+
+sudo find /home/mmatsui/data/mariadb -mindepth 1 -delete
+
+sudo find /home/mmatsui/data/wordpress -mindepth 1 -delete
+```
+
+It removes:
+
+* Containers
+* Docker networks created by the project
+* Docker named volumes
+* Generated secret files
+* MariaDB persistent data
+* WordPress persistent data
+
+The `mariadb` and `wordpress` directories themselves are preserved, but their contents are deleted.
+
+**Warning:** This command permanently removes the project's persistent database data, WordPress files, and generated credentials.
+
+### Clean and Rebuild
 
 ```bash
 make re
 ```
 
-This is a combination of:
+This target performs:
 
 ```bash
-make fdown
+make fclean
 make build
 ```
 
-It removes the existing containers, networks, volumes, and generated secrets, then creates new secrets, rebuilds the Docker images, and starts new containers.
+It completely resets the project and then builds and starts it again.
+
+As a result:
+
+1. Existing containers and networks are removed.
+2. Docker named volumes are removed.
+3. Generated secret files are deleted.
+4. MariaDB and WordPress persistent data is deleted.
+5. New secret files are generated.
+6. Docker images are rebuilt.
+7. New containers are created and started.
 
 Use this command when you want to completely reset the project and start with a fresh environment.
+
 
 ## Container Management and Debugging
 
@@ -532,6 +582,11 @@ To completely reset the project, including the persistent MariaDB and WordPress 
 ```bash
 sudo rm -rf /home/mmatsui/data/mariadb
 sudo rm -rf /home/mmatsui/data/wordpress
+```
+
+or running
+```bash
+make fclean
 ```
 
 After deleting these directories, the project will start with a fresh MariaDB database and WordPress installation the next time it is rebuilt.
