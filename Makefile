@@ -32,10 +32,10 @@ down:
 fdown:
 	@docker compose -f $(COMPOSE_FILE) down -v
 	@echo "---Docker compose down fully---"
-	@rm -rf $(SECRETS_DIR)
-	@echo "---Delete Secrets---"
 
 fclean: fdown
+	@rm -rf $(SECRETS_DIR)
+	@echo "---Delete Secrets---"
 	@sudo find /home/mmatsui/data/mariadb -mindepth 1 -delete
 	@sudo find /home/mmatsui/data/wordpress -mindepth 1 -delete
 	@echo "---Delete datas---"
