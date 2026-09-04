@@ -65,6 +65,7 @@ services:
     container_name: adminer
     volumes:
       - adminer_data:/var/www/adminer
+    restart: always
 
 
 volumes:
