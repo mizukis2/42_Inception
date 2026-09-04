@@ -2,6 +2,7 @@ SECRETS_DIR = secrets
 DB_ROOT_PASSWORD = $(SECRETS_DIR)/db_root_password.txt
 DB_PASSWORD = $(SECRETS_DIR)/db_password.txt
 WP_ADMIN_PASSWORD = $(SECRETS_DIR)/wp_admin_password.txt
+WP_USER_PASSWORD = $(SECRETS_DIR)/wp_user_password.txt
 COMPOSE_FILE = srcs/docker-compose.yml
 
 setup:
@@ -15,6 +16,9 @@ setup:
 	fi
 	@if [ ! -f $(WP_ADMIN_PASSWORD) ]; then \
 	openssl rand -base64 32 > $(WP_ADMIN_PASSWORD); \
+	fi
+	@if [ ! -f $(WP_USER_PASSWORD) ]; then \
+	openssl rand -base64 32 > $(WP_USER_PASSWORD); \
 	fi
 
 up: setup

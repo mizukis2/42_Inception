@@ -132,10 +132,12 @@ secrets/
 ├── db_password
 ├── db_root_password
 └── wp_admin_password
+└── wp_user_password
 ```
 - `db_root_password.txt` → MariaDB root password
 - `db_password.txt` → MariaDB application user password
 - `wp_admin_password.txt` → WordPress administrator password
+- `wp_user_password.txt` → WordPress user (set as author) password
 - Secrets are generated automatically by `make setup` if they don't already exist.
 - They should not be committed to Git.
 - Running `make down` keeps the existing credentials.
@@ -145,6 +147,7 @@ secrets/
 cat secrets/db_password.txt
 cat secrets/db_root_password.txt
 cat secrets/wp_admin_password.txt
+cat secrets/wp_user_password.txt
 ```
 
 ## Basic check
