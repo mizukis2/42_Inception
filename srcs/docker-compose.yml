@@ -25,7 +25,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       WP_ADMIN_USER: ${WP_ADMIN_USER}
       WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
-      WP_USER_USER: ${WP_USER_USER}
+      WP_USER: ${WP_USER}
       WP_USER_EMAIL: ${WP_USER_EMAIL}
       DOMAIN_NAME: ${DOMAIN_NAME}
     secrets:
