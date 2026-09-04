@@ -29,12 +29,11 @@ EOSQL
     MYSQL_PASSWORD="$(cat /run/secrets/db_password)"
 
     mariadb -u root -p"${MYSQL_ROOT_PASSWORD}" <<-EOSQL
+        DELETE FROM mysql.user WHERE User='';
+        FLUSH PRIVILEGES;
         CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
         CREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
         GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
-        DROP USER IF EXISTS ''@'localhost';
-        DROP USER IF EXISTS ''@'c88af5ec2f48';
-        FLUSH PRIVILEGES;
 EOSQL
 
     mariadb-admin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
