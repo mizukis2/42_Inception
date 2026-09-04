@@ -84,6 +84,7 @@ This command:
   * `db_root_password.txt`
   * `db_password.txt`
   * `wp_admin_password.txt`
+  * `wp_user_password.txt`
 
 The secret files are used by Docker Compose to provide sensitive credentials to the appropriate containers.
 

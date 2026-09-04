@@ -25,11 +25,14 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       WP_ADMIN_USER: ${WP_ADMIN_USER}
       WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      WP_USER_USER: ${WP_USER_USER}
+      WP_USER_EMAIL: ${WP_USER_EMAIL}
       DOMAIN_NAME: ${DOMAIN_NAME}
     secrets:
       - db_root_password
       - db_password
       - wp_admin_password
+      - wp_user_password
     depends_on:
       - mariadb
     volumes:
@@ -86,6 +89,8 @@ secrets:
     file: ../secrets/db_password.txt
   wp_admin_password:
     file: ../secrets/wp_admin_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
 
 networks:
   inception:
